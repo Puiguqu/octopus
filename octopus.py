@@ -3,6 +3,7 @@ import numpy as np
 import pyautogui
 import time
 from pynput.keyboard import Controller
+import sys
 
 # --- Setup ---
 keyboard = Controller()
@@ -12,20 +13,15 @@ pyautogui.FAILSAFE = False  # prevent sudden abort
 TEMPLATE_GATHER = "npc_gather.png"
 TEMPLATE_FEED = "feed.png"
 TEMPLATE_LEVEL7 = "level7.png"
-TEMPLATE_RECEIVE = "receive.png"
 
 # Load templates
 npc_template = cv2.imread(TEMPLATE_GATHER, cv2.IMREAD_GRAYSCALE)
 feed_template = cv2.imread(TEMPLATE_FEED, cv2.IMREAD_GRAYSCALE)
 level7_template = cv2.imread(TEMPLATE_LEVEL7, cv2.IMREAD_GRAYSCALE)
-receive_template = cv2.imread(TEMPLATE_RECEIVE, cv2.IMREAD_GRAYSCALE)
 
-def find_template(template, threshold=0.9, region=None):
-    """
-    Return center coordinates of template if found, else None.
-    region = (x, y, width, height) if you want to limit search area.
-    """
-    screenshot = pyautogui.screenshot(region=region)
+def find_template(template, threshold=0.9):
+    """Return center coordinates of template if found, else None"""
+    screenshot = pyautogui.screenshot()
     screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
 
     res = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
@@ -34,15 +30,11 @@ def find_template(template, threshold=0.9, region=None):
     if max_val >= threshold:
         center_x = max_loc[0] + template.shape[1] // 2
         center_y = max_loc[1] + template.shape[0] // 2
-        if region:
-            center_x += region[0]
-            center_y += region[1]
         return (center_x, center_y)
     return None
 
 def main():
     print("Starting script... Press Ctrl+C to stop.")
-    last_level7 = False  # for double-checking
 
     while True:
         # --- Check NPC/Gather ---
@@ -68,26 +60,11 @@ def main():
             print("Released mouse and moved cursor left")
             time.sleep(1)
 
-        # --- Check Level 7 + Receive ---
-        pos_level7 = find_template(level7_template, threshold=0.92)
-        if pos_level7 and last_level7:  # require 2 consecutive detections
-            print("Level 7 confirmed → checking for Receive button...")
-            pos_receive = find_template(receive_template, threshold=0.9)
-            if pos_receive:
-                print(f"Receive button found at {pos_receive} → Clicking")
-                pyautogui.moveTo(pos_receive[0], pos_receive[1], duration=0.2)
-                pyautogui.click()
-                time.sleep(1)
-
-                # Type RECEIVE REWARD + Enter
-                pyautogui.typewrite("RECEIVE REWARD")
-                pyautogui.press("enter")
-                print("Typed 'RECEIVE REWARD' and pressed Enter")
-
-                # prevent spam until Level 7 disappears
-                while find_template(level7_template, threshold=0.92):
-                    time.sleep(1)
-        last_level7 = bool(pos_level7)
+        # --- Check Level 7 (STOP if found) ---
+        pos_level7 = find_template(level7_template, threshold=0.9)
+        if pos_level7:
+            print("Level 7 detected → Stopping script to avoid interfering with bot.")
+            sys.exit(0)
 
         time.sleep(0.5)  # scan interval
 
