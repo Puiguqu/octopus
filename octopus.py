@@ -8,7 +8,7 @@ from pynput.keyboard import Controller
 keyboard = Controller()
 pyautogui.FAILSAFE = False  # prevent sudden abort
 
-# Templates (place them in same folder as this script)
+# Templates (place in same folder as script)
 TEMPLATE_GATHER = "npc_gather.png"
 TEMPLATE_FEED = "feed.png"
 TEMPLATE_LEVEL7 = "level7.png"
@@ -20,9 +20,12 @@ feed_template = cv2.imread(TEMPLATE_FEED, cv2.IMREAD_GRAYSCALE)
 level7_template = cv2.imread(TEMPLATE_LEVEL7, cv2.IMREAD_GRAYSCALE)
 receive_template = cv2.imread(TEMPLATE_RECEIVE, cv2.IMREAD_GRAYSCALE)
 
-def find_template(template, threshold=0.8):
-    """Return center coordinates of template if found, else None"""
-    screenshot = pyautogui.screenshot()
+def find_template(template, threshold=0.9, region=None):
+    """
+    Return center coordinates of template if found, else None.
+    region = (x, y, width, height) if you want to limit search area.
+    """
+    screenshot = pyautogui.screenshot(region=region)
     screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
 
     res = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
@@ -31,15 +34,19 @@ def find_template(template, threshold=0.8):
     if max_val >= threshold:
         center_x = max_loc[0] + template.shape[1] // 2
         center_y = max_loc[1] + template.shape[0] // 2
+        if region:
+            center_x += region[0]
+            center_y += region[1]
         return (center_x, center_y)
     return None
 
 def main():
     print("Starting script... Press Ctrl+C to stop.")
+    last_level7 = False  # for double-checking
 
     while True:
         # --- Check NPC/Gather ---
-        pos_gather = find_template(npc_template, threshold=0.8)
+        pos_gather = find_template(npc_template, threshold=0.85)
         if pos_gather:
             print("NPC/Gather found → Holding 'R' for 5s")
             keyboard.press('r')
@@ -50,7 +57,7 @@ def main():
             time.sleep(1)
 
         # --- Check Feed ---
-        pos_feed = find_template(feed_template, threshold=0.8)
+        pos_feed = find_template(feed_template, threshold=0.85)
         if pos_feed:
             print(f"Feed found at {pos_feed} → Click and hold for 5s")
             pyautogui.moveTo(pos_feed[0], pos_feed[1], duration=0.2)
@@ -62,10 +69,10 @@ def main():
             time.sleep(1)
 
         # --- Check Level 7 + Receive ---
-        pos_level7 = find_template(level7_template, threshold=0.8)
-        if pos_level7:
-            print("Level 7 detected → checking for Receive button...")
-            pos_receive = find_template(receive_template, threshold=0.8)
+        pos_level7 = find_template(level7_template, threshold=0.92)
+        if pos_level7 and last_level7:  # require 2 consecutive detections
+            print("Level 7 confirmed → checking for Receive button...")
+            pos_receive = find_template(receive_template, threshold=0.9)
             if pos_receive:
                 print(f"Receive button found at {pos_receive} → Clicking")
                 pyautogui.moveTo(pos_receive[0], pos_receive[1], duration=0.2)
@@ -76,6 +83,11 @@ def main():
                 pyautogui.typewrite("RECEIVE REWARD")
                 pyautogui.press("enter")
                 print("Typed 'RECEIVE REWARD' and pressed Enter")
+
+                # prevent spam until Level 7 disappears
+                while find_template(level7_template, threshold=0.92):
+                    time.sleep(1)
+        last_level7 = bool(pos_level7)
 
         time.sleep(0.5)  # scan interval
 
