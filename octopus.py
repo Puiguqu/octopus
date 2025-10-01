@@ -61,16 +61,16 @@ def main():
             print("Released mouse and moved cursor left")
             time.sleep(1)
 
-        # --- Check Level 7 Reward ---
+        # --- Check Level 7 + Receive ---
         pos_level7 = find_template(level7_template, threshold=0.8)
         if pos_level7:
-            print("Level 7 detected → Checking for Receive button...")
+            print("Level 7 detected → checking for Receive button...")
             pos_receive = find_template(receive_template, threshold=0.8)
             if pos_receive:
                 print(f"Receive button found at {pos_receive} → Clicking")
                 pyautogui.moveTo(pos_receive[0], pos_receive[1], duration=0.2)
                 pyautogui.click()
-                time.sleep(2)
+                time.sleep(1)
 
                 # Type RECEIVE REWARD + Enter
                 pyautogui.typewrite("RECEIVE REWARD")
