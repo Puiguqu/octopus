@@ -18,6 +18,9 @@ if not exist "venv" (
         exit /b 1
     )
     echo Virtual environment created successfully.
+    echo.
+    echo Press any key to continue...
+    pause
 ) else (
     echo Virtual environment already exists.
 )
@@ -59,15 +62,15 @@ if not exist "level7.png" (
 
 echo.
 echo Starting Octopus automation script...
-echo Press Ctrl+C to stop the script.
+echo The script will restart automatically if it stops.
+echo Close this window to stop completely.
 echo.
 
-:: Run the main script
+:: Run the main script in a loop
+:loop
 python octopus.py
-
-:: Keep window open if there's an error
-if errorlevel 1 (
-    echo.
-    echo Script ended with an error.
-    pause
-)
+echo.
+echo Script stopped. Restarting in 3 seconds...
+echo Press Ctrl+C to exit or close this window.
+timeout /t 3 /nobreak >nul
+goto loop
