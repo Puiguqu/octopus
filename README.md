@@ -9,6 +9,62 @@ This script automatically detects and interacts with:
 - Feed buttons for octopus feeding
 - Level 7 detection to stop the automation
 
+## Installation
+
+### Prerequisites
+
+1. **Python 3.7 or higher**
+   - Download from [python.org](https://www.python.org/downloads/)
+   - During installation, make sure to check "Add Python to PATH"
+   - Verify installation by opening Command Prompt and typing: `python --version`
+
+### Setup Instructions
+
+1. **Download the project**
+   ```bash
+   git clone https://github.com/Puiguqu/octopus.git
+   cd octopus
+   ```
+   
+   Or download as ZIP and extract to your desired folder.
+
+2. **Prepare template images**
+   - Take screenshots of the following game elements:
+     - `npc_gather.png` - The NPC gathering interface/button
+     - `feed.png` - The octopus feed button
+     - `level7.png` - The level 7 indicator/text
+   - Save these images in the same folder as the script
+   - Use PNG format for best results
+   - Ensure images are clear and cropped tightly around the target
+
+3. **Run the automation**
+   - Double-click `run_octopus.bat`
+   - The batch file will automatically:
+     - Create a virtual environment
+     - Install all required packages
+     - Start the automation script
+
+### Manual Installation (Advanced)
+
+If you prefer to set up manually:
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install requirements
+pip install -r requirements.txt
+
+# Run the script
+python octopus.py
+```
+
 ## Quick Start
 
 1. **Run the automation**: Double-click `run_octopus.bat`
