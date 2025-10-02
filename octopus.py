@@ -61,7 +61,7 @@ def main():
             time.sleep(1)
 
         # --- Check Level 7 (STOP if found) ---
-        pos_level7 = find_template(level7_template, threshold=0.95)
+        pos_level7 = find_template(level7_template, threshold=0.99)
         if pos_level7:
             print("Level 7 detected → Stopping script to avoid interfering with bot.")
             sys.exit(0)
